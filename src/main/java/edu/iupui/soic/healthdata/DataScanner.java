@@ -26,36 +26,27 @@ public class DataScanner {
     final String ALL_DATA_URL = "http://hub.healthdata.gov/api/2/rest/dataset";
 
     public DataScanner() {
-        BufferedWriter bw = null;
         try {
             String data = getData(ALL_DATA_URL);
             JSONArray json = new JSONArray(data);
-            for (int i = 0; i < 3; i++) {
+            for (int i = 0; i <=1738; i++) {
                 String uid = json.getString(i);
                 String dataDesc = getData(ALL_DATA_URL + "/" + uid);
                 System.out.println("=============================");
+                System.out.println("DATA DESC = " + dataDesc);
                 JSONObject obj = new JSONObject(dataDesc);
-                String myContent = ("TITLE = " + obj.get("title")) + ("DESCRIPTION = " + obj.get("notes"));
-                File file = new File("C:/myfile.txt");
-                if (!file.exists()) {
-                    file.createNewFile();
-                }
-                FileWriter fw = new FileWriter(file);
-                bw = new BufferedWriter(fw);
-                bw.write(myContent);
-                System.out.println("File written Successfully");
+                System.out.println("TITLE = " + obj.get("title") + "DESCRIPTION = " + obj.get("notes"));
 
                 JSONArray jsonArray = obj.getJSONArray("resources");
                 JSONObject jsonObject = jsonArray.getJSONObject(0);
-                System.out.println("data= " + getData(jsonObject.getString("url")));
+                String str = getData(jsonObject.getString("url"));
+                System.out.println("data= " + str);
+                writeToFile(str, new File("D:\\dataFile" +i+".txt"));
                 System.out.println("=============================");
-
             }
-
         } catch (IOException ex) {
             Logger.getLogger(DataScanner.class.getName()).log(Level.SEVERE, null, ex);
         }
-
     }
 
     public final static void main(String[] args) throws Exception {
@@ -66,6 +57,7 @@ public class DataScanner {
         CloseableHttpClient httpclient = HttpClients.createDefault();
         HttpGet httpget = new HttpGet(url);
 
+        System.out.println("URL = " + url);
         System.out.println("Executing request " + httpget.getRequestLine());
 
         // Create a custom response handler
@@ -85,6 +77,15 @@ public class DataScanner {
         };
         String responseBody = httpclient.execute(httpget, responseHandler);
         return responseBody;
+    }
+
+    private void writeToFile(String str, File file) throws IOException {
+        if (!file.exists()) {
+            file.createNewFile();
+        }
+        BufferedWriter bw = new BufferedWriter(new FileWriter(file));
+        bw.write(str);
+        bw.close();
     }
 
 }
