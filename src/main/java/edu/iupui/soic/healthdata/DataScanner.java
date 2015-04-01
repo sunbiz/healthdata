@@ -29,7 +29,7 @@ public class DataScanner {
         try {
             String data = getData(ALL_DATA_URL);
             JSONArray json = new JSONArray(data);
-            for (int i = 0; i <=1738; i++) {
+            for (int i = 0; i < json.length(); i++) {
                 String uid = json.getString(i);
                 String dataDesc = getData(ALL_DATA_URL + "/" + uid);
                 System.out.println("=============================");
@@ -38,14 +38,17 @@ public class DataScanner {
                 System.out.println("TITLE = " + obj.get("title") + "DESCRIPTION = " + obj.get("notes"));
 
                 JSONArray jsonArray = obj.getJSONArray("resources");
-                JSONObject jsonObject = jsonArray.getJSONObject(0);
+                JSONObject jsonObject = jsonArray.getJSONObject(i);
                 String str = getData(jsonObject.getString("url"));
                 System.out.println("data= " + str);
-                writeToFile(str, new File("D:\\dataFile" +i+".txt"));
+                writeToFile(str, new File("D:\\dataFile" + i + ".txt"));
                 System.out.println("=============================");
             }
         } catch (IOException ex) {
             Logger.getLogger(DataScanner.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        if (request.getData("mimeType") != null) {
+            mimeType = request.getData("mimeType");
         }
     }
 
@@ -54,7 +57,7 @@ public class DataScanner {
     }
 
     private String getData(String url) throws IOException {
-        CloseableHttpClient httpclient = HttpClients.createDefault();
+        final CloseableHttpClient httpclient = HttpClients.createDefault();
         HttpGet httpget = new HttpGet(url);
 
         System.out.println("URL = " + url);
@@ -71,21 +74,29 @@ public class DataScanner {
                     return entity != null ? EntityUtils.toString(entity) : null;
                 } else {
                     throw new ClientProtocolException("Unexpected response status: " + status);
+                    HttpEntity entity = response.getEntity();
+                    ContentType contentType = null;
+                    if (entity != null) {
+                        contentType = ContentType.get(entity);
+                    }
+                    String mimeType = contentType.getMimeType();
                 }
+
+                String responseBody = httpclient.execute(httpget, responseHandler);
+                return responseBody;
             }
 
-        };
-        String responseBody = httpclient.execute(httpget, responseHandler);
-        return responseBody;
-    }
+            ;
 
-    private void writeToFile(String str, File file) throws IOException {
-        if (!file.exists()) {
-            file.createNewFile();
+       private void writeToFile(String str, File file) throws IOException {
+                if (!file.exists()) {
+                    file.createNewFile();
+                    file.getParentFile().mkdirs();
+
+                }
+
+                BufferedWriter bw = new BufferedWriter(new FileWriter(file));
+                bw.write(str);
+                bw.close();
+            }
         }
-        BufferedWriter bw = new BufferedWriter(new FileWriter(file));
-        bw.write(str);
-        bw.close();
-    }
-
-}
