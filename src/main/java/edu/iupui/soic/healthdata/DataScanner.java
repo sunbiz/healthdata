@@ -6,14 +6,11 @@ import java.io.FileWriter;
 import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.net.ssl.SSLContext;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.conn.socket.LayeredConnectionSocketFactory;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -21,10 +18,6 @@ import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-/**
- *
- * @author Manika
- */
 public class DataScanner {
 
     final String ALL_DATA_URL = "http://hub.healthdata.gov/api/2/rest/dataset";
@@ -46,12 +39,14 @@ public class DataScanner {
                     JSONArray jsonArray = obj.getJSONArray("resources");
                     if (jsonArray != null && jsonArray.length() > 0) {
                         JSONObject jsonObject = jsonArray.getJSONObject(0);
-                        String str = getData(jsonObject.getString("url"));
-
-                        System.out.println("data= " + str);
-
-                        if (this.mimeType.equals("text/csv") || this.mimeType.equals("text/plain")) {
-                            writeToFile(str, new File("D:\\dataFile" + i + ".csv"));
+                        String url = jsonObject.getString("url");
+                        System.out.println("URL for DATA = " + url);
+                        if (!url.contains(".zip")) {
+                            String str = getData(url);
+                            System.out.println("data= " + str);
+                            if (this.mimeType.equals("text/csv") || this.mimeType.equals("text/plain")) {
+                                writeToFile(str, new File("C:\\Users\\saptpurk\\Documents\\healthdata\\" + i + ".csv"));
+                            }
                         }
                         System.out.println("=============================");
                     }
@@ -68,12 +63,7 @@ public class DataScanner {
     }
 
     private String getData(String url) throws IOException {
-        SSLContext sslContext = null;
         CloseableHttpClient httpclient = HttpClients.createDefault();
-        SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContext, SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
-
-        CloseableHttpClient httpclient = HttpClients.custom().setSSLSocketFactory(sslsf).build();
-
         HttpGet httpget = new HttpGet(url);
 
         System.out.println("URL = " + url);
